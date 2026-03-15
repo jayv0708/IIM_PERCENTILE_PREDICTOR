@@ -32,12 +32,18 @@ model.fit(X_train, y_train)
 score = model.score(X_test, y_test)
 print(f"Model Accuracy (R^2 Score): {score*100:.2f}%")
 
-print("\n--- Predictions ---")
-# Prediction 1
-# Input in the form : GRE, TOEFL, University Rating, SOP, LOR, CGPA, Research
-pred1 = round(model.predict([[337, 118, 4, 4.5, 4.5, 9.65, 0]])[0]*100, 3)
-print(f'Chance of getting into UCLA (Profile 1) is {pred1}%')
+print("\n--- Interactive Prediction ---")
+print("Please provide the following details to predict your admission chances:")
+try:
+    gre = float(input("Enter GRE Score (e.g., 320): "))
+    toefl = float(input("Enter TOEFL Score (e.g., 110): "))
+    rating = float(input("Enter University Rating (1-5): "))
+    sop = float(input("Enter SOP Strength (1.0-5.0): "))
+    lor = float(input("Enter LOR Strength (1.0-5.0): "))
+    cgpa = float(input("Enter CGPA (e.g., 8.5): "))
+    research = float(input("Enter Research Experience (1 for Yes, 0 for No): "))
 
-# Prediction 2
-pred2 = round(model.predict([[320, 113, 2, 2.0, 2.5, 8.64, 1]])[0]*100, 3)
-print(f'Chance of getting into UCLA (Profile 2) is {pred2}%')
+    pred = round(model.predict([[gre, toefl, rating, sop, lor, cgpa, research]])[0]*100, 3)
+    print(f'\n=> Your estimated chance of admission is {pred}%')
+except ValueError:
+    print("\nInvalid input. Please enter numeric values.")
