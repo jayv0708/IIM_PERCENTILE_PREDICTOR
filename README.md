@@ -58,3 +58,5 @@ python run.py
 
 ## Results
 The Random Forest model learns from real IIM cutoff thresholds, enabling it to differentiate chance of admission across categories (e.g., a General candidate at 92 percentile vs. an SC candidate at 70 percentile). The app provides instant feedback on likelihood of receiving IIM interview calls.
+
+# IIM_PERCENTILE_PREDICTOR
