@@ -2,48 +2,55 @@ import warnings
 warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+import pickle
 
-print("Loading data...")
-# Loading the dataset
-df = pd.read_csv('admission_predict.csv')
-
-# Renaming the columns with appropriate names
-df = df.rename(columns={'GRE Score': 'GRE', 'TOEFL Score': 'TOEFL', 'LOR ': 'LOR', 'Chance of Admit ': 'Probability'})
-
-# Removing the serial no, column
-df.drop('Serial No.', axis='columns', inplace=True)
-
-# Replacing the 0 values from ['GRE','TOEFL','University Rating','SOP','LOR','CGPA'] by NaN
-df_copy = df.copy(deep=True)
-df_copy[['GRE','TOEFL','University Rating','SOP','LOR','CGPA']] = df_copy[['GRE','TOEFL','University Rating','SOP','LOR','CGPA']].replace(0, np.NaN)
-
-# Splitting the dataset in features and label
-X = df_copy.drop('Probability', axis='columns')
-y = df_copy['Probability']
-
-print("Training model...")
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=5)
-
-model = LinearRegression()
-model.fit(X_train, y_train)
-
-score = model.score(X_test, y_test)
-print(f"Model Accuracy (R^2 Score): {score*100:.2f}%")
-
-print("\n--- Interactive Prediction ---")
-print("Please provide the following details to predict your admission chances:")
+print("\n--- IIM Target Percentile Predictor ---")
 try:
-    gre = float(input("Enter GRE Score (e.g., 320): "))
-    toefl = float(input("Enter TOEFL Score (e.g., 110): "))
-    rating = float(input("Enter University Rating (1-5): "))
-    sop = float(input("Enter SOP Strength (1.0-5.0): "))
-    lor = float(input("Enter LOR Strength (1.0-5.0): "))
-    cgpa = float(input("Enter CGPA (e.g., 8.5): "))
-    research = float(input("Enter Research Experience (1 for Yes, 0 for No): "))
+    model = pickle.load(open("model.pkl", "rb"))
+    features = pickle.load(open("features.pkl", "rb"))
+    targets = pickle.load(open("targets.pkl", "rb"))
+except:
+    print("Model not found. Please run train_model.py first.")
+    exit()
 
-    pred = round(model.predict([[gre, toefl, rating, sop, lor, cgpa, research]])[0]*100, 3)
-    print(f'\n=> Your estimated chance of admission is {pred}%')
+try:
+    tenth = float(input("Enter 10th Percentage (0-100): "))
+    twelfth = float(input("Enter 12th Percentage (0-100): "))
+    ug = float(input("Enter Undergrad Percentage (0-100): "))
+    
+    print("\nStreams: Engineering, Commerce, Science, Arts")
+    stream = input("Enter your Undergrad Stream exactly as above: ").strip()
+    
+    work_ex = float(input("Enter Work Experience in Months: "))
+    
+    print("\nCategories: General, OBC, SC, ST, EWS, PwD")
+    category = input("Enter your category exactly as above: ").strip()
+    
+    print("\nGenders: Male, Female, Other")
+    gender = input("Enter your gender exactly as above: ").strip()
+
+    input_dict = {
+        '10th_Percentage': [tenth],
+        '12th_Percentage': [twelfth],
+        'Undergrad_Percentage': [ug],
+        'Work_Experience_Months': [work_ex]
+    }
+    
+    for col in features:
+        if col not in input_dict:
+            input_dict[col] = [0]
+            
+    if f"Category_{category}" in input_dict: input_dict[f"Category_{category}"] = [1]
+    if f"Gender_{gender}" in input_dict: input_dict[f"Gender_{gender}"] = [1]
+    if f"Undergrad_Stream_{stream}" in input_dict: input_dict[f"Undergrad_Stream_{stream}"] = [1]
+
+    input_df = pd.DataFrame(input_dict)[features]
+    predictions = model.predict(input_df)[0]
+    
+    print(f"\n=> Profile: {gender}, {category}, {stream}, 10/12/UG: {tenth}/{twelfth}/{ug}, WorkEx: {work_ex}m")
+    print("\n=> Estimated Target Percentiles to secure an interview:")
+    for i, target in enumerate(targets):
+        print(f"   - {target.replace('Target_', '')}: {predictions[i]:.2f} percentile")
+
 except ValueError:
-    print("\nInvalid input. Please enter numeric values.")
+    print("\nInvalid input. Please enter numeric values where requested.")
