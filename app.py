@@ -1,24 +1,23 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-import pickle
 import joblib
 import os
-import sys
-import subprocess
 
 st.set_page_config(page_title="IIM Target Percentile Predictor", page_icon="🎓", layout="wide")
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 @st.cache_resource
 def load_model_v3():
-    model = joblib.load("model.pkl")
-    features = joblib.load("features.pkl")
-    targets = joblib.load("targets.pkl")
+    model = joblib.load(os.path.join(BASE_DIR, "model.pkl"))
+    features = joblib.load(os.path.join(BASE_DIR, "features.pkl"))
+    targets = joblib.load(os.path.join(BASE_DIR, "targets.pkl"))
     return model, features, targets
 
 @st.cache_data
 def load_cutoffs():
-    college_csv_dir = "cat data/College_wise_category_cutoff"
+    college_csv_dir = os.path.join(BASE_DIR, "cat data", "College_wise_category_cutoff")
     CAT_MAP = {
         'NC-OBC-cum-Transgender': 'OBC', 'NC-OBC': 'OBC',
         'PWD': 'PwD', 'SC': 'SC', 'ST': 'ST',
@@ -42,21 +41,16 @@ def load_cutoffs():
                 pass
     return rules
 
-if not os.path.exists("model.pkl"):
-    st.info("⚙️ Model missing! Automatically triggering a local retraining sequence optimized for this server... this will take about 15 seconds.")
-    try:
-        subprocess.run([sys.executable, "train_model.py"], check=True)
-        st.success("✅ Training complete! Reloading resources...")
-        st.experimental_rerun()
-    except Exception as e:
-        st.error(f"Failed to train model automatically: {e}")
-        st.stop()
+# No auto-training on Render. Provide graceful fallback.
+if not os.path.exists(os.path.join(BASE_DIR, "model.pkl")):
+    st.error("Model files not found! Please run `python train_model.py` locally and push the .pkl files to the repository.")
+    st.stop()
 
 try:
     model, features, targets = load_model_v3()
     cutoffs = load_cutoffs()
-except FileNotFoundError:
-    st.error("Model files not found! Please run `python train_model.py` first.")
+except Exception as e:
+    st.error(f"Failed to load application data: {str(e)}")
     st.stop()
 
 st.title("🎓 Target Percentile Predictor")
