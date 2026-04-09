@@ -1,5 +1,6 @@
+import numpy as np
 import pandas as pd
-import pickle
+import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
@@ -32,7 +33,7 @@ mae = mean_absolute_error(y_test, y_pred)
 print(f"Mean Abs. Error across all IIMs: {mae:.2f} percentiles")
 
 # Save model, feature order, and target list
-pickle.dump(model, open("model.pkl", "wb"))
-pickle.dump(list(X.columns), open("features.pkl", "wb"))
-pickle.dump(target_cols, open("targets.pkl", "wb"))
+joblib.dump(model, "model.pkl")
+joblib.dump(list(X.columns), "features.pkl")
+joblib.dump(target_cols, "targets.pkl")
 print("Model, features, and targets saved successfully!")

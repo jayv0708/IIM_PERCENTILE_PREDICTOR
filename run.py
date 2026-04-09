@@ -2,13 +2,13 @@ import warnings
 warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
-import pickle
+import joblib
 
 print("\n--- IIM Target Percentile Predictor ---")
 try:
-    model = pickle.load(open("model.pkl", "rb"))
-    features = pickle.load(open("features.pkl", "rb"))
-    targets = pickle.load(open("targets.pkl", "rb"))
+    model = joblib.load("model.pkl")
+    features = joblib.load("features.pkl")
+    targets = joblib.load("targets.pkl")
 except:
     print("Model not found. Please run train_model.py first.")
     exit()

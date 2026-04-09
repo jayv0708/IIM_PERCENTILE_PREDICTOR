@@ -2,15 +2,18 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import pickle
+import joblib
 import os
+import sys
+import subprocess
 
 st.set_page_config(page_title="IIM Target Percentile Predictor", page_icon="🎓", layout="wide")
 
 @st.cache_resource
 def load_model_v3():
-    model = pickle.load(open("model.pkl", "rb"))
-    features = pickle.load(open("features.pkl", "rb"))
-    targets = pickle.load(open("targets.pkl", "rb"))
+    model = joblib.load("model.pkl")
+    features = joblib.load("features.pkl")
+    targets = joblib.load("targets.pkl")
     return model, features, targets
 
 @st.cache_data
@@ -38,6 +41,16 @@ def load_cutoffs():
             except Exception:
                 pass
     return rules
+
+if not os.path.exists("model.pkl"):
+    st.info("⚙️ Model missing! Automatically triggering a local retraining sequence optimized for this server... this will take about 15 seconds.")
+    try:
+        subprocess.run([sys.executable, "train_model.py"], check=True)
+        st.success("✅ Training complete! Reloading resources...")
+        st.experimental_rerun()
+    except Exception as e:
+        st.error(f"Failed to train model automatically: {e}")
+        st.stop()
 
 try:
     model, features, targets = load_model_v3()
